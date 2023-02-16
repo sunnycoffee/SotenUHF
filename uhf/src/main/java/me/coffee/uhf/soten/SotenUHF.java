@@ -62,6 +62,7 @@ public class SotenUHF implements UHFModelListener {
     }
 
     public void start() {
+        if (mUHFManager.isOpen()) return;
         mUHFManager.open(context);
         mUHFManager.register(this);
     }
@@ -82,7 +83,7 @@ public class SotenUHF implements UHFModelListener {
         mUHFManager.unregister(this);
         mUHFManager.close(uhf, context);
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        PowerManagerUtils.open(pm, 0x0C);
+        PowerManagerUtils.close(pm, 0x0C);
 
     }
 

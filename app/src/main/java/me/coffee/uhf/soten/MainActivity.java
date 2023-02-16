@@ -1,7 +1,9 @@
 package me.coffee.uhf.soten;
 
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -11,14 +13,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        TextView tv = findViewById(R.id.tv);
+        tv.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         SotenUHF.getInstance().init(this);
         SotenUHF.getInstance().start();
         SotenUHF.getInstance().setListener(value -> {
             Log.d("UHF-TID", value);
+            runOnUiThread(() -> {
+                tv.append(value + "\r\n");
+            });
         });
 
         findViewById(R.id.start_btn).setOnClickListener(v -> {
+            tv.setText(null);
             SotenUHF.getInstance().read(Integer.MAX_VALUE);
         });
         findViewById(R.id.stop_btn).setOnClickListener(v -> {
