@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         SotenUHF.getInstance().init(this);
         SotenUHF.getInstance().start();
         SotenUHF.getInstance().setListener(value -> {
-            Log.d("UHF-TID", value);
+            Log.d("UHF-TID", "TID:" + value);
             runOnUiThread(() -> {
                 tv.append(value + "\r\n");
             });
@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.start_btn).setOnClickListener(v -> {
             tv.setText(null);
-            SotenUHF.getInstance().read(Integer.MAX_VALUE);
+            SotenUHF.getInstance().read(1);
         });
         findViewById(R.id.stop_btn).setOnClickListener(v -> {
             SotenUHF.getInstance().stop();

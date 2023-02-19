@@ -2,6 +2,7 @@ package me.coffee.uhf.soten;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.PowerManager;
 import android.widget.Toast;
 
@@ -37,6 +38,7 @@ public class SotenUHF implements UHFModelListener {
     private TimerTask mTimerTask;
     private int max = -1;
     private SotenListener mListener;
+    private boolean isScan;
 
     private SotenUHF() {
     }
@@ -68,6 +70,7 @@ public class SotenUHF implements UHFModelListener {
     }
 
     public void stop() {
+        isScan = false;
         if (mTimerTask != null) {
             mTimerTask.cancel();
             mTimerTask = null;
@@ -77,9 +80,13 @@ public class SotenUHF implements UHFModelListener {
             mTimer.purge();
             mTimer = null;
         }
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
     }
 
     public void close() {
+        stop();
         mUHFManager.unregister(this);
         mUHFManager.close(uhf, context);
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
@@ -92,9 +99,11 @@ public class SotenUHF implements UHFModelListener {
             Toast.makeText(context, "请打开UHF再扫描", Toast.LENGTH_SHORT).show();
             return;
         }
+        isScan = true;
         this.max = max;
         if (max == 1) {
             getTID();
+            countDownTimer.start();
         } else if (max >= 0) {
             if (mTimer == null) mTimer = new Timer();
             mTimerTask = new TimerTask() {
@@ -103,7 +112,7 @@ public class SotenUHF implements UHFModelListener {
                     getTID();
                 }
             };
-            mTimer.schedule(mTimerTask, 0, 100);
+            mTimer.schedule(mTimerTask, 0, 60);
         }
     }
 
@@ -133,14 +142,33 @@ public class SotenUHF implements UHFModelListener {
             if (null != data && data.length > 0) {
                 String tid = StringUtils.toHexString(data).toUpperCase();
                 tid = tid.replaceAll("\\s*", "");
-                if (mListener != null && max > 0) mListener.onReceived(tid);
-            }
-            if (max == 1) {
-                max = -1;
-                stop();
+                finish(tid);
+            } else if (max == 1 && isScan) {
+                getTID();
             }
         }
     }
+
+    private void finish(String tid) {
+        if (mListener != null && max > 0) mListener.onReceived(tid);
+        if (max == 1) {
+            max = -1;
+            stop();
+        }
+    }
+
+    private CountDownTimer countDownTimer = new CountDownTimer(1500, 500) {
+
+        @Override
+        public void onTick(long millisUntilFinished) {
+
+        }
+
+        @Override
+        public void onFinish() {
+            if (isScan) finish(null);
+        }
+    };
 
     @Override
     public void onLostConnect(Exception e) {
